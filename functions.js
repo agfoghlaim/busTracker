@@ -1,4 +1,5 @@
 const fs = require('fs');
+const axios = require('axios');
 
 module.exports = {
   subtractMins: function(time, numMins){
@@ -113,12 +114,16 @@ module.exports = {
           console.log("error reading", err);
           reject("error reading")
         }
-      
+        
         let obj = JSON.parse(data);
+        
         if(obj) {
           console.log(stuffToSave)
-          obj.buses.push(stuffToSave); 
-          json = JSON.stringify(obj, null, 1); 
+          let what = [...obj]
+          what.push(stuffToSave)
+          //obj.push(stuffToSave); 
+          console.log("TYPE OF OJB......", typeof (obj))
+          let json = JSON.stringify(what, null, 1); 
           fs.writeFile('earlyLateResults.json', json, 'utf8', (err,d)=>{
             if(err) reject("error writing")
             console.log("written", d)
@@ -129,6 +134,12 @@ module.exports = {
         }
       });
     })
+  },
+  testFirebase: function(stuffToSave){
+    const fbUrl = `https://buses-6f0d4.firebaseio.com/`;
+    axios.post(`${fbUrl}/buses.json`,stuffToSave)
+    .then(res=>console.log(res))
+    .catch(e=>console.log("fb error: ", e))
   }
 
 }

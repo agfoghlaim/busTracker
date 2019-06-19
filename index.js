@@ -34,42 +34,45 @@ function createCron(hr, min, dayNo,route,stop, stopId, busname, due){
   
 
   cron.schedule(`0 ${min} ${hr} 1-31 1-12 ${dayNo}`, () => {
-    //console.log(`running a task for... ${route} ${stop} ${stopId} ${busname} ${due}`);
+    //console.log(`running a query for... ${route} ${stop} ${stopId} ${busname} ${due}`);
 
     let queryResponse = makeRequest(stopId, route)
     queryResponse.then(res=>{
       
       let relevantBus = findBus(res.results,due, route)
+      let theTime = new Date().toTimeString();
+      let stuffToSave = {
+        queryTime: `${hr}:${min}`,
+        queryTimeStamp: theTime,
+        forBusDue: due,
+        route: route,
+        stop: stop,
+        stopid: stopId,
+        busname:busname,
+        timetabled:"bus_not_found",
+        actual:"bus_not_found",
+        earlyOrLate:"bus_not_found",
+        minutesOff:"bus_not_found"
+      }
       if(relevantBus !== false){
-        
-      
         //console.log("scheduled time:" + relevantBus.scheduleddeparturedatetime, "actual? time:" + relevantBus.departuredatetime)
         //console.log(helpers.isEarlyOrLate(relevantBus.scheduleddeparturedatetime.substr(11,5), relevantBus.departuredatetime.substr(11,5)))
-        
         let earlyOrLate = helpers.isEarlyOrLate(relevantBus.scheduleddeparturedatetime.substr(11,5), relevantBus.departuredatetime.substr(11,5));
         let howEarlyLate = helpers.calculateHowEarlyOrLateBusIs(relevantBus.scheduleddeparturedatetime.substr(11,5), relevantBus.departuredatetime.substr(11,5)) 
-        let theTime = new Date().toTimeString();
+        
         console.log("INSIDE REL ROUTE NOT FALSE!!!", earlyOrLate, howEarlyLate)
-        let stuffToSave = {
-          queryTime: `${hr}:${min}`,
-          queryTimeStamp: theTime,
-          forBusDue: due,
-          route: route,
-          stop: stop,
-          stopid: stopId,
-          busname:busname,
-          timetabled: relevantBus.scheduleddeparturedatetime,
-          actual: relevantBus.departuredatetime,
-          earlyOrLate: earlyOrLate,
-          minutesOff: howEarlyLate.mins
-        }
-        //console.log("WILL BE SAVING THIS...................................................................." , stuffToSave)
-        let saveData = helpers.testJSON(stuffToSave)
-        saveData
-        .then(res=>console.log("is saved? ", res))
-        .catch(err=>console.log("error with test json probably:", err))
+        stuffToSave.timetabled= relevantBus.scheduleddeparturedatetime;
+        stuffToSave.actual= relevantBus.departuredatetime;
+        stuffToSave.earlyOrLate= earlyOrLate;
+        stuffToSave.minutesOff= howEarlyLate.mins.toString();
 
-      }//else
+      }else if(relevantBus === false){
+      }
+         // let saveData = helpers.testJSON(stuffToSave)
+          let saveData = helpers.testFirebase(stuffToSave)
+          saveData
+          .then(res=>console.log("is saved? ", res))
+          .catch(err=>console.log("error with test json probably:", err))
 
     })
     .catch(err=> console.log("Error with queryResponse/makeRequest ", err))
@@ -84,25 +87,20 @@ function makeRequest(stopid,routeid){
   return new Promise((resolve,reject)=>{
     axios.get(url)
     .then(function (response) {
-      // handle success
-      console.log("numResults for ", routeid, response.data.results.length, url)
+      //console.log("numResults for ", routeid, response.data.results.length, url)
       resolve(response.data)
-
     })
     .catch(function (error) {
-      // handle error
-      console.log("error querying for rt info");
-      reject(error)
+      reject("RTPI Query Error... ", error)
     })
     .finally(function () {
-      // always executed
+ 
     });
   })
 }
 
-//function will find the relevant bus in the array of results from the RTPI
-function findBus(routesArray, due, routeno){
-  
+//function will find the relevant bus in the array of results from the RTPI (RTPI will have responded with the next few dusses due, not just the one we're looking for)
+function findBus(routesArray, due){
 
   //querys scheduled to run 2 mins before departure times, so subtract 2 mins from due
   let newDue = helpers.subtractMins(due,2)
@@ -110,17 +108,15 @@ function findBus(routesArray, due, routeno){
   
   let relevantRoute = routesArray.filter(route=>{
 
-  
     helpers.isWithinMinutesOf(route.scheduleddeparturedatetime.substr(11,5), newDue,2)
 
-   
-     return helpers.isWithinMinutesOf(newDue, route.scheduleddeparturedatetime.substr(11,5), 3)
+    return helpers.isWithinMinutesOf(newDue, route.scheduleddeparturedatetime.substr(11,5), 3)
     
   })
- // console.log("relRoute : ", relevantRoute.length)
+// console.log("relRoute : ", relevantRoute.length) 
   //relevantRoute should always be length = 1;
   //0 means the bus being queried for is not on the RTPI for that stop
-  console.log("READ HERE WHEN IT FAILS.......", relevantRoute)
+
   return (relevantRoute.length === 1) ? relevantRoute[0] : false
 }
 
