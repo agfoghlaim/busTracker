@@ -106,40 +106,72 @@ module.exports = {
       return "on time"
     }
   },
-  testJSON: function(stuffToSave){
-    return new Promise((resolve,reject)=>{
+  // testJSON: function(stuffToSave){
+  //   return new Promise((resolve,reject)=>{
  
-      fs.readFile('earlyLateResults.json', 'utf8', (err, data)=>{
-        if (err) {
-          console.log("error reading", err);
-          reject("error reading")
-        }
+  //     fs.readFile('earlyLateResults.json', 'utf8', (err, data)=>{
+  //       if (err) {
+  //         console.log("error reading", err);
+  //         reject("error reading")
+  //       }
         
-        let obj = JSON.parse(data);
+  //       let obj = JSON.parse(data);
         
-        if(obj) {
-          console.log(stuffToSave)
-          let what = [...obj]
-          what.push(stuffToSave)
-          //obj.push(stuffToSave); 
-          console.log("TYPE OF OJB......", typeof (obj))
-          let json = JSON.stringify(what, null, 1); 
-          fs.writeFile('earlyLateResults.json', json, 'utf8', (err,d)=>{
-            if(err) reject("error writing")
-            console.log("written", d)
-            resolve('written')
-          });
-        }else{
-          console.log("json skipped for ", stuffToSave)
+  //       if(obj) {
+  //         //console.log(stuffToSave)
+  //         let what = [...obj]
+  //         what.push(stuffToSave)
+  //         //obj.push(stuffToSave); 
+  //         //console.log("TYPE OF OJB......", typeof (obj))
+  //         let json = JSON.stringify(what, null, 1); 
+  //         fs.writeFile('earlyLateResults.json', json, 'utf8', (err,d)=>{
+  //           if(err) reject("error writing")
+  //           console.log("written")
+  //           resolve('written')
+  //         });
+  //       }else{
+  //        // console.log("json skipped for ", stuffToSave)
+  //       }
+  //     });
+  //   })
+  // },
+  testFirebase: function(stuffToSave){
+    return new Promise((resolve,reject)=>{
+      const fbUrl = `https://buses-6f0d4.firebaseio.com/`;
+      console.log("stuff to save prob ", stuffToSave)
+      axios.post(`${fbUrl}/buses.json`,stuffToSave)
+      .then(res=>{
+        resolve("fb ok")
+      })
+      .catch(e=>{
+        reject("fb problem", e)
+      })
+    })
+
+  },
+  getWeatherDetails: function(){
+    console.log("WEATHER CALL COUNT ")
+    return new Promise((resolve,reject)=>{
+      axios.get('https://api.darksky.net/forecast/3832809d10204e77f82e89932e7e3228/53.2747740041651,-9.04875088331228')
+      .then(res=>{
+        console.log("got weather")
+        let currentWeather = {
+          lastUpdated: res.data.currently.time,
+          precipIntensity: res.data.currently.precipIntensity,
+          precipProbability: res.data.currently.precipProbability,
+          summary: res.data.currently.summary,
+          icon: res.data.currently.icon
         }
-      });
+        resolve(currentWeather);
+      })
+      .catch(e=>reject("weather error", e))
     })
   },
-  testFirebase: function(stuffToSave){
-    const fbUrl = `https://buses-6f0d4.firebaseio.com/`;
-    axios.post(`${fbUrl}/buses.json`,stuffToSave)
-    .then(res=>console.log(res))
-    .catch(e=>console.log("fb error: ", e))
+  
+  shouldUpdateNow: function(lastUpdated){
+    const fiveMinsInMilliSeconds = 300000;
+    let now = Date.now();
+    (lastUpdated - now > fiveMinsInMilliSeconds) ? true : false 
   }
 
 }
