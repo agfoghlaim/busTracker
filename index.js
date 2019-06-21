@@ -30,7 +30,7 @@ cron.schedule('*/5 * * * *', () => {
 
 timetables.forEach(route=>{
   route.stops.forEach(stop=>{
-
+    
     //run query 2 mins before
     stop[day.dayName].forEach(bus=>{
       let hour = bus.time.substr(0,2)
@@ -55,20 +55,6 @@ function createCron(hr, min, dayNo,route,stop, stopId, busname, due){
 
       let relevantBus = findBus(res.results,due, route)
       let theTime = new Date().toTimeString();
-      
-
-      /*
-      weather
-      */
-    //  async function askForWeatherDets() {
-    //   console.log('calling weather');
-    //   var weather = await dealWithWeather();
-    //   console.log(weather);
-    //   return weather;
-      
-    // }
-    
-    
 
       let stuffToSave = {
         weather: theCurrentWeather,
@@ -85,8 +71,6 @@ function createCron(hr, min, dayNo,route,stop, stopId, busname, due){
         minutesOff:"bus_not_found"
       }
 
-
-
       if(relevantBus !== false){
         let earlyOrLate = helpers.isEarlyOrLate(relevantBus.scheduleddeparturedatetime.substr(11,5), relevantBus.departuredatetime.substr(11,5));
         let howEarlyLate = helpers.calculateHowEarlyOrLateBusIs(relevantBus.scheduleddeparturedatetime.substr(11,5), relevantBus.departuredatetime.substr(11,5)) 
@@ -96,10 +80,17 @@ function createCron(hr, min, dayNo,route,stop, stopId, busname, due){
         stuffToSave.actual= relevantBus.departuredatetime;
         stuffToSave.earlyOrLate= earlyOrLate;
         stuffToSave.minutesOff= howEarlyLate.mins.toString();
-
+      
+      //TODO What is going on below?
+      //  |||
+      //  |||
+      //  |||
+      // VVVVV
+      //  VVV
+      //   V    
       }else if(relevantBus === false){
       }
-         // let saveData = helpers.testJSON(stuffToSave)
+          // let saveData = helpers.testJSON(stuffToSave)
           let saveData = helpers.testFirebase(stuffToSave)
           saveData
           .then(res=>console.log("is saved? ", res))
@@ -130,7 +121,7 @@ function makeRequest(stopid,routeid){
   })
 }
 
-//function will find the relevant bus in the array of results from the RTPI (RTPI will have responded with the next few dusses due, not just the one we're looking for)
+//function will find the relevant bus in the array of results from the RTPI (RTPI will have responded with the next few busses due, not just the one we're looking for)
 function findBus(routesArray, due){
 
   //querys scheduled to run 2 mins before departure times, so subtract 2 mins from due
@@ -144,15 +135,13 @@ function findBus(routesArray, due){
     return helpers.isWithinMinutesOf(newDue, route.scheduleddeparturedatetime.substr(11,5), 3)
     
   })
-// console.log("relRoute : ", relevantRoute.length) 
+
   //relevantRoute should always be length = 1;
   //0 means the bus being queried for is not on the RTPI for that stop
-
   return (relevantRoute.length === 1) ? relevantRoute[0] : false
 }
 
-//toda @ 11.02
-// console.log(getDayOfWeek())
+// @ 11:02am
 // cron.schedule('0 2 11 1-31 1-12 1', () => {
 //   console.log('running a task every minute');
 // });
@@ -167,77 +156,5 @@ function findBus(routesArray, due){
 // # │ │ │ │ │ │
 // # │ │ │ │ │ │
 // # * * * * * *
-
-
-      // if(min % 2 === 0 || !currentWeatherStatus.status){
-      //   console.log(min % 2 === 0, !currentWeatherStatus.status)
-      //   let currentWeather = helpers.getCurrentWeather();
-      //   currentWeather.then(weather=>{
-      //     console.log("weather: ", weather)
-      //   })
-      // }
-
-/*
-
-GET THE WEATHER
-
-*/
-// function initalWeather(){
-//   return new Promise((resolve,reject)=>{
-//     axios.get()
-//   })
-// }
-
-// cron.schedule('*/2 * * * *', () => {
-//   console.log('running a task every two minutes');
-// });
-
-/*
-deal with weather can be called by all queries
-if it knows the weather, it will return it
-if current timestamp is more than 5 mins since it updated, it will update and return that
- */
-
-
-
-// function dealWithWeather(){
-//   return new Promise((resolve,reject)=>{
-//     //let currentWeather = {}
-//     console.log("have something ", currentWeather)
-//     if (!currentWeather.lastUpdated){
-//       console.log("getting weather cause currentWeather is empty")
-//       let weather = helpers.getWeatherDetails();
-//       weather.then(weather=>{
-//         currentWeather = weather
-//         resolve(weather)
-//       })
-//       .catch(e=>reject("weather error",e))
-
-//     }else{
-      
-//       let shouldUpdateNow = helpers.shouldUpdateNow(currentWeather.lastUpdated)
-//       console.log("checking if currentWeather needs to be updated: ", shouldUpdateNow)
-//      // console.log("shouldUpdate?: ", updateOrNot)
-//       if(!shouldUpdateNow){
-//         resolve(currentWeather)
-//       }else{
-//         //update weather
-//         let weather = helpers.getWeatherDetails();
-//         weather.then(weather=>{
-//           currentWeather = weather
-//           resolve(weather)
-//         })
-//         .catch(e=>reject("weather error",e))
-//       }
-//     }
-   
-    
-
-//   })
-// }
-
-
-
-
 
 

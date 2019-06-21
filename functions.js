@@ -2,6 +2,10 @@ const fs = require('fs');
 const axios = require('axios');
 
 module.exports = {
+
+  //take in a time and a number
+  //subtract number*mins from time
+  //return new time
   subtractMins: function(time, numMins){
     
     const oneMinuteInMilliseconds = 60000;
@@ -15,7 +19,6 @@ module.exports = {
     date.setMinutes(min)
     date = date.valueOf() - numMins;
   
-    //let timeOut = `${new Date(date).getHours()}:${new Date(date).getMinutes()}`
     let hrOut = new Date(date).getHours()
     let minOut = new Date(date).getMinutes()
     //return timeOut
@@ -27,8 +30,6 @@ module.exports = {
     if(output.min.toString().length === 1){
       output.min = output.min.toString().padStart(2, '0')
     }
-    //console.log("subtracting " + numMins + " from " + time)
-   // console.log("subrractMins with pad start: ", output)
     return output
   },
   
@@ -47,8 +48,11 @@ module.exports = {
       }
      return day
   },
+
+  //take in 2 times
+  //check if they're within numMinutes of each other
   isWithinMinutesOf: function(busLoadTime,beTime,numMinutes){
-   // console.log("LOOK", busLoadTime,beTime,numMinutes)
+ 
     let theirDate = new Date();
     let myDate = new Date();
     
@@ -62,10 +66,12 @@ module.exports = {
     var diff = Math.max(theirDate.valueOf(), myDate.valueOf()) - Math.min(theirDate.valueOf(), myDate.valueOf()); 
 
     diff = diff/1000/60
-    //console.log("diff is: " + diff)
+
     //is the difference less than numMinutes???
     return (diff <= numMinutes)? true : false;
   },
+
+  
   calculateHowEarlyOrLateBusIs: function(sch, act){
     let schTime = new Date();
     let actTime = new Date();
@@ -83,8 +89,7 @@ module.exports = {
     }else if(schTime.valueOf() < actTime.valueOf()){
       return {status:'late', mins:diff}
     }else{
-      console.log("returning not found.....................",sch,act)
-      return {status:'lateuuu', mins:diff}
+      return {status:'ontime', mins:diff}
     }
 
   },
@@ -106,6 +111,7 @@ module.exports = {
       return "on time"
     }
   },
+  // Something is wrong with testJSON
   // testJSON: function(stuffToSave){
   //   return new Promise((resolve,reject)=>{
  
@@ -135,6 +141,7 @@ module.exports = {
   //     });
   //   })
   // },
+
   testFirebase: function(stuffToSave){
     return new Promise((resolve,reject)=>{
       const fbUrl = `https://buses-6f0d4.firebaseio.com/`;
@@ -152,6 +159,8 @@ module.exports = {
   getWeatherDetails: function(){
     console.log("WEATHER CALL COUNT ")
     return new Promise((resolve,reject)=>{
+
+      //coordinates for Eyre Square 
       axios.get('https://api.darksky.net/forecast/3832809d10204e77f82e89932e7e3228/53.2747740041651,-9.04875088331228')
       .then(res=>{
         console.log("got weather")
@@ -168,6 +177,7 @@ module.exports = {
     })
   },
   
+  //check if 5 mins has passed since weather was last updated
   shouldUpdateNow: function(lastUpdated){
     const fiveMinsInMilliSeconds = 300000;
     let now = Date.now();
