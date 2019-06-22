@@ -1,6 +1,9 @@
-const fs = require('fs');
+//const fs = require('fs');
 const axios = require('axios');
+const config = require('./config');
+const mongoose = require('mongoose');
 
+mongoose.connect(config.MONGO_URI,{useNewUrlParser:true})
 module.exports = {
 
   //take in a time and a number
