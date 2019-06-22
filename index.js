@@ -2,7 +2,7 @@ const cron = require('node-cron');
 const timetables = require('./timetablesOut.json');
 const helpers = require('./functions');
 const axios = require('axios');
-const fs = require('fs');
+//const fs = require('fs');
 
 //what day is today? weekday, sat or sunday?
 const day = helpers.getDayOfWeek();
@@ -99,7 +99,10 @@ function createCron(hr, min, dayNo,route,stop, stopId, busname, due){
     })
     .catch(err=> console.log("Error with queryResponse/makeRequest ", err))
 
-  });
+  }, {
+    scheduled: true,
+    timezone: "Europe/Dublin"
+  });//end cron
  
 }
 
