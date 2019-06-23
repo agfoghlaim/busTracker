@@ -98,7 +98,7 @@ function createCron(hr, min, dayNo,route,direction,stop, stopId, busname, due){
 
           let saveData = helpers.saveToMongo(stuffToSave);
           saveData
-          .then(res=>console.log("snapshot saved? ", res))
+          .then(res=>console.log("snapshot saved?, nModified: ", res.nModified))
           .catch(err=>console.log("error saving snapshot:", err))
 
     })

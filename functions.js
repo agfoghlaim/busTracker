@@ -191,7 +191,7 @@ module.exports = {
   
   saveToMongo: function(stuffToSave){
     return new Promise((resolve,reject)=>{
-     // console.log("stuff to save....", stuffToSave.route,stuffToSave.direction,stuffToSave.stop, stuffToSave.bestopid)
+      console.log("stuff to save for... ", stuffToSave.route,stuffToSave.direction,stuffToSave.stop, stuffToSave.bestopid)
       const {route, direction, bestopid} = stuffToSave;
 
       BusRoute.updateOne(
