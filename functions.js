@@ -2,8 +2,10 @@
 const axios = require('axios');
 const config = require('./config');
 const mongoose = require('mongoose');
+const BusRoute = require('./models/busRoute');
 
 mongoose.connect(config.MONGO_URI,{useNewUrlParser:true})
+
 module.exports = {
 
   //take in a time and a number
@@ -24,7 +26,7 @@ module.exports = {
   
     let hrOut = new Date(date).getHours()
     let minOut = new Date(date).getMinutes()
-    //return timeOut
+  
     let output = {hr:hrOut, min:minOut}
     //console.log(output.hr.toString().length, output.min.toString().length)
     if(output.hr.toString().length === 1){
@@ -145,6 +147,7 @@ module.exports = {
   //   })
   // },
 
+  //edit "let saveData" in index.js to save to firebase instead
   testFirebase: function(stuffToSave){
     return new Promise((resolve,reject)=>{
       const fbUrl = `https://buses-6f0d4.firebaseio.com/`;
@@ -157,7 +160,6 @@ module.exports = {
         reject("fb problem", e)
       })
     })
-
   },
   getWeatherDetails: function(){
     console.log("WEATHER CALL COUNT ")
@@ -185,6 +187,25 @@ module.exports = {
     const fiveMinsInMilliSeconds = 300000;
     let now = Date.now();
     (lastUpdated - now > fiveMinsInMilliSeconds) ? true : false 
+  },
+  
+  saveToMongo: function(stuffToSave){
+    return new Promise((resolve,reject)=>{
+     // console.log("stuff to save....", stuffToSave.route,stuffToSave.direction,stuffToSave.stop, stuffToSave.bestopid)
+      const {route, direction, bestopid} = stuffToSave;
+
+      BusRoute.updateOne(
+        { route: route, direction:direction,  "stops.bestopid": bestopid},
+        { $push: 
+            {"stops.$.snapshots": 
+                stuffToSave
+            }
+        }
+      )
+      .exec()
+      .then(d=>resolve(d))
+      .catch(e=>reject(e))
+    })
   }
 
 }

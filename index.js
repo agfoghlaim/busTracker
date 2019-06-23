@@ -39,13 +39,13 @@ timetables.forEach(route=>{
       let dayNo = day.dayNumber;
       let queryTime =  helpers.subtractMins(bus.time,2)
       //console.log(stop.bestopid, stop)
-      createCron(queryTime.hr,queryTime.min,dayNo,route.route,stop.name, stop.bestopid, bus.bus, bus.time)
+      createCron(queryTime.hr,queryTime.min,dayNo,route.route, route.direction, stop.name, stop.bestopid, bus.bus, bus.time)
     })
     //console.log("There should be this many queryies: ", stop[day.dayName].length)
   })
 })
 
-function createCron(hr, min, dayNo,route,stop, stopId, busname, due){
+function createCron(hr, min, dayNo,route,direction,stop, stopId, busname, due){
   
 
   cron.schedule(`0 ${min} ${hr} 1-31 1-12 ${dayNo}`, () => {
@@ -55,21 +55,23 @@ function createCron(hr, min, dayNo,route,stop, stopId, busname, due){
     queryResponse.then(res=>{
 
       let relevantBus = findBus(res.results,due, route)
-      let theTime = new Date().toTimeString();
+      let theTime = new Date().toString();
 
       let stuffToSave = {
         weather: theCurrentWeather,
-        queryTime: `${hr}:${min}`,
-        queryTimeStamp: theTime,
+        queryScheduledTime: `${hr}:${min}`,
+        dayOfWeek: new Date().toString().substring(0,3),
+        queryDateTime: theTime,
         forBusDue: due,
         route: route,
+        direction:direction,
         stop: stop,
-        stopid: stopId,
+        bestopid: stopId,
         busname:busname,
-        timetabled:"bus_not_found",
-        actual:"bus_not_found",
-        earlyOrLate:"bus_not_found",
-        minutesOff:"bus_not_found"
+        timetabled:"bus_not_found_on_rtpi",
+        actual:"bus_not_found_on_rtpi",
+        earlyOrLate:"bus_not_found_on_rtpi",
+        minutesOff:"bus_not_found_on_rtpi"
       }
 
       if(relevantBus !== false){
@@ -91,11 +93,13 @@ function createCron(hr, min, dayNo,route,stop, stopId, busname, due){
       //   V    
       }else if(relevantBus === false){
       }
-          // let saveData = helpers.testJSON(stuffToSave)
-          let saveData = helpers.testFirebase(stuffToSave)
+        // let saveData = helpers.testJSON(stuffToSave)
+        //let saveData = helpers.testFirebase(stuffToSave)
+
+          let saveData = helpers.saveToMongo(stuffToSave);
           saveData
-          .then(res=>console.log("is saved? ", res))
-          .catch(err=>console.log("error with test json probably:", err))
+          .then(res=>console.log("snapshot saved? ", res))
+          .catch(err=>console.log("error saving snapshot:", err))
 
     })
     .catch(err=> console.log("Error with queryResponse/makeRequest ", err))
